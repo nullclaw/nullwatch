@@ -151,6 +151,14 @@ List evals:
 zig build run -- evals --dataset prod-shadow --verdict fail
 ```
 
+Seed local demo runs:
+
+```bash
+zig build run -- demo-seed
+zig build run -- runs --limit 20
+zig build run -- run demo-tool-failure
+```
+
 Ingest a span from the CLI:
 
 ```bash
@@ -353,6 +361,17 @@ zig build run -- --from-json '{"home":"~/.nullwatch","port":7710,"data_dir":"dat
 ```
 
 This keeps the service headless while letting `nullhub` own install/setup UI.
+
+For a local NullHub flight-recorder demo:
+
+```bash
+zig build run -- demo-seed
+zig build run -- serve --port 7710
+```
+
+Start NullHub with `NULLWATCH_URL=http://127.0.0.1:7710` and open the
+Observability page to inspect the seeded runs, spans, evals, token usage, cost,
+and failure context.
 
 ## CI and releases
 
