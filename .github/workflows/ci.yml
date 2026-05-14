@@ -1,92 +1,22 @@
 name: CI
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ZIG_VERSION: "0.16.0"
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: linux-x86_64
-            zig_target: x86_64-linux-musl
-          - os: macos-latest
-            target: macos-aarch64
-            zig_target: aarch64-macos
-          - os: windows-latest
-            target: windows-x86_64
-            zig_target: x86_64-windows
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install Zig 0.16.0
-        run: bash .github/scripts/install-zig.sh "${ZIG_VERSION}"
-
-      - name: Cache Zig build outputs
-        uses: actions/cache@v5
-        with:
-          path: |
-            .zig-cache
-            ~/.cache/zig
-          key: zig-${{ matrix.target }}-${{ hashFiles('src/**/*.zig', 'build.zig', 'build.zig.zon', 'tests/test_e2e.sh') }}
-          restore-keys: zig-${{ matrix.target }}-
-
-      - name: Run unit tests
-        run: zig build test --summary all 2>&1 | tee test-output.txt
-
-      - name: Run E2E tests
-        if: runner.os == 'Linux'
-        run: bash tests/test_e2e.sh
-
-      - name: Build ReleaseSmall
-        run: zig build -Dtarget=${{ matrix.zig_target }} -Doptimize=ReleaseSmall -Dversion=ci
-
-      - name: Preserve host binary
-        run: |
-          mkdir -p ci-artifacts
-          cp "zig-out/bin/nullwatch${{ runner.os == 'Windows' && '.exe' || '' }}" "ci-artifacts/nullwatch${{ runner.os == 'Windows' && '.exe' || '' }}"
-
-      - name: Job summary
-        if: always()
-        run: |
-          echo "## nullwatch CI - ${{ matrix.target }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Metric | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
-
-          if [ -f test-output.txt ]; then
-            TESTS=$(grep -o '[0-9]*/[0-9]* tests passed' test-output.txt | head -1 || true)
-            echo "| Tests | ${TESTS:-n/a} |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          BIN="ci-artifacts/nullwatch"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            BIN="ci-artifacts/nullwatch.exe"
-          fi
-          if [ -f "$BIN" ]; then
-            SIZE=$(wc -c < "$BIN" | tr -d ' ')
-            SIZE_HR=$(awk "BEGIN {printf \"%.1f MB\", $SIZE / 1048576}")
-            echo "| Binary (ReleaseSmall) | ${SIZE_HR} (${SIZE} bytes) |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Upload binary
-        if: success()
-        uses: actions/upload-artifact@v7
-        with:
-          name: nullwatch-${{ matrix.target }}
-          path: ci-artifacts/nullwatch${{ runner.os == 'Windows' && '.exe' || '' }}
+  zig:
+    uses: nullclaw/nullbuilder/.github/workflows/zig-ci.yml@v1
+    permissions:
+      contents: read
+    with:
+      binary_name: nullwatch
+      artifact_prefix: nullwatch
+      build_args: -Dversion=ci
+      e2e_target: linux-x86_64
+      e2e_command: bash tests/test_e2e.sh

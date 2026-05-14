@@ -381,8 +381,8 @@ and failure context.
 ## CI and releases
 
 - `tests/test_e2e.sh` boots a real server and validates auth, ingest, OTLP mapping, and CLI queries.
-- `.github/workflows/ci.yml` runs unit tests, Linux E2E, and host builds on Linux/macOS/Windows.
-- `.github/workflows/release.yml` builds tagged release artifacts for Linux, macOS, and Windows and publishes them to GitHub Releases.
+- `.github/workflows/ci.yml` delegates unit tests, Linux E2E, and host builds to `nullclaw/nullbuilder`.
+- `.github/workflows/release.yml` delegates tagged release artifacts for Linux, macOS, and Windows to `nullclaw/nullbuilder`.
 - `scripts/build-release.sh` produces the same release artifact names locally plus `SHA256SUMS`.
 
 ## Near-term next steps
