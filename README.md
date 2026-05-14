@@ -367,3 +367,6 @@ This keeps the service headless while letting `nullhub` own install/setup UI.
 - Add dataset, prompt version, and experiment entities.
 - Add regression diff endpoints for comparing prompt/model/strategy versions.
 - Add alert rules and anomaly summaries that `nullhub` can render.
+
+## Community SDKs
+- **[nullwatch-python-sdk](https://github.com/nullclaw/nullwatch-python-sdk/)** — Python SDK with zero required dependencies. Ships built-in eval scorers for RAG hallucination detection ([LettuceDetect](https://github.com/KRLabsOrg/LettuceDetect)) and tool-call schema validation.

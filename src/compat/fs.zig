@@ -222,10 +222,7 @@ pub const Dir = struct {
     pub fn makePath(self: Dir, sub_path: []const u8) !void {
         if (sub_path.len == 0) return;
         if (path.isAbsolute(sub_path)) {
-            makeDirAbsolute(sub_path) catch |err| switch (err) {
-                error.PathAlreadyExists => return,
-                else => |e| return e,
-            };
+            try makePathAbsolute(sub_path);
             return;
         }
 
@@ -281,6 +278,10 @@ pub fn makeDirAbsolute(absolute_path: []const u8) Io.Dir.CreateDirError!void {
     try Io.Dir.createDirAbsolute(shared.io(), absolute_path, .default_dir);
 }
 
+pub fn makePathAbsolute(absolute_path: []const u8) Io.Dir.CreateDirPathError!void {
+    try Io.Dir.createDirPath(Io.Dir.cwd(), shared.io(), absolute_path);
+}
+
 pub fn deleteFileAbsolute(absolute_path: []const u8) Io.Dir.DeleteFileError!void {
     try Io.Dir.deleteFileAbsolute(shared.io(), absolute_path);
 }
@@ -304,4 +305,21 @@ pub fn realpathAlloc(allocator: Allocator, file_path: []const u8) ![]u8 {
         return try allocator.dupe(u8, path_z);
     }
     return try cwd().realpathAlloc(allocator, file_path);
+}
+
+test "makePathAbsolute creates nested absolute directories" {
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+
+    const tmp_dir = Dir.wrap(tmp.dir);
+    const root = try tmp_dir.realpathAlloc(std.testing.allocator, ".");
+    defer std.testing.allocator.free(root);
+
+    const nested = try path.join(std.testing.allocator, &.{ root, "nested", "path" });
+    defer std.testing.allocator.free(nested);
+
+    try makePathAbsolute(nested);
+    try accessAbsolute(nested, .{});
+
+    try makePathAbsolute(nested);
 }
