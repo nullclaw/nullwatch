@@ -62,10 +62,7 @@ fn getU16(obj: std.json.ObjectMap, key: []const u8) ?u16 {
 
 fn ensureHome(home: []const u8) !void {
     if (std.fs.path.isAbsolute(home)) {
-        std_compat.fs.makeDirAbsolute(home) catch |err| switch (err) {
-            error.PathAlreadyExists => {},
-            else => return err,
-        };
+        try std_compat.fs.makePathAbsolute(home);
         return;
     }
 

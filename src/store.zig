@@ -420,10 +420,7 @@ fn finalizeVerdict(summary: *domain.RunSummary) void {
 
 fn ensureDirExists(path: []const u8) !void {
     if (std.fs.path.isAbsolute(path)) {
-        std_compat.fs.makeDirAbsolute(path) catch |err| switch (err) {
-            error.PathAlreadyExists => {},
-            else => return err,
-        };
+        try std_compat.fs.makePathAbsolute(path);
         return;
     }
 
