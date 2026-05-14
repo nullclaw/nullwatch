@@ -80,4 +80,18 @@ NULLWATCH_HOME="${HOME_DIR}" zig build run -- summary | grep -q '"span_count": 2
 NULLWATCH_HOME="${HOME_DIR}" zig build run -- runs --verdict pass | grep -q '"run_id": "run-123"'
 NULLWATCH_HOME="${HOME_DIR}" zig build run -- spans --tool-name shell | grep -q '"run_id": "run-otlp"'
 
+DEMO_DATA_DIR="${TMP_DIR}/demo-data"
+DEMO_FIRST="$(cd "${ROOT_DIR}" && zig build run -- demo-seed --data-dir "${DEMO_DATA_DIR}")"
+echo "${DEMO_FIRST}" | grep -q '"runs_created": 3'
+echo "${DEMO_FIRST}" | grep -q '"runs_skipped": 0'
+echo "${DEMO_FIRST}" | grep -q '"spans_created": 11'
+echo "${DEMO_FIRST}" | grep -q '"evals_created": 3'
+
+DEMO_SECOND="$(cd "${ROOT_DIR}" && zig build run -- demo-seed --data-dir "${DEMO_DATA_DIR}")"
+echo "${DEMO_SECOND}" | grep -q '"runs_created": 0'
+echo "${DEMO_SECOND}" | grep -q '"runs_skipped": 3'
+
+zig build run -- summary --data-dir "${DEMO_DATA_DIR}" | grep -q '"run_count": 3'
+zig build run -- run demo-tool-failure --data-dir "${DEMO_DATA_DIR}" | grep -q '"overall_verdict": "fail"'
+
 echo "nullwatch e2e: ok"
