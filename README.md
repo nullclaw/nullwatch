@@ -159,6 +159,11 @@ zig build run -- runs --limit 20
 zig build run -- run demo-tool-failure
 ```
 
+`demo-seed` creates a deterministic, idempotent local dataset for demos and
+manual testing without API keys, hosted services, or a running agent workload.
+It includes a passing code-review run, a failed tool-call run, and a
+handoff/retry run with checkpoint context.
+
 Ingest a span from the CLI:
 
 ```bash
@@ -383,6 +388,7 @@ and failure context.
 ## Near-term next steps
 
 - Replace JSONL storage with embedded SQLite while preserving the API contract.
+- Extend demo fixtures with GenAI/OpenInference attributes and scenario selection.
 - Add dataset, prompt version, and experiment entities.
 - Add regression diff endpoints for comparing prompt/model/strategy versions.
 - Add alert rules and anomaly summaries that `nullhub` can render.
