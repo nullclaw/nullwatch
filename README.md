@@ -151,6 +151,19 @@ List evals:
 zig build run -- evals --dataset prod-shadow --verdict fail
 ```
 
+Seed local demo runs:
+
+```bash
+zig build run -- demo-seed
+zig build run -- runs --limit 20
+zig build run -- run demo-tool-failure
+```
+
+`demo-seed` creates a deterministic, idempotent local dataset for demos and
+manual testing without API keys, hosted services, or a running agent workload.
+It includes a passing code-review run, a failed tool-call run, and a
+handoff/retry run with checkpoint context.
+
 Ingest a span from the CLI:
 
 ```bash
@@ -354,16 +367,28 @@ zig build run -- --from-json '{"home":"~/.nullwatch","port":7710,"data_dir":"dat
 
 This keeps the service headless while letting `nullhub` own install/setup UI.
 
+For a local NullHub flight-recorder demo:
+
+```bash
+zig build run -- demo-seed
+zig build run -- serve --port 7710
+```
+
+Start NullHub with `NULLWATCH_URL=http://127.0.0.1:7710` and open the
+Observability page to inspect the seeded runs, spans, evals, token usage, cost,
+and failure context.
+
 ## CI and releases
 
 - `tests/test_e2e.sh` boots a real server and validates auth, ingest, OTLP mapping, and CLI queries.
-- `.github/workflows/ci.yml` runs unit tests, Linux E2E, and host builds on Linux/macOS/Windows.
-- `.github/workflows/release.yml` builds tagged release artifacts for Linux, macOS, and Windows and publishes them to GitHub Releases.
+- `.github/workflows/ci.yml` delegates unit tests, Linux E2E, and host builds to `nullclaw/nullbuilder`.
+- `.github/workflows/release.yml` delegates tagged release artifacts for Linux, macOS, and Windows to `nullclaw/nullbuilder`.
 - `scripts/build-release.sh` produces the same release artifact names locally plus `SHA256SUMS`.
 
 ## Near-term next steps
 
 - Replace JSONL storage with embedded SQLite while preserving the API contract.
+- Extend demo fixtures with GenAI/OpenInference attributes and scenario selection.
 - Add dataset, prompt version, and experiment entities.
 - Add regression diff endpoints for comparing prompt/model/strategy versions.
 - Add alert rules and anomaly summaries that `nullhub` can render.

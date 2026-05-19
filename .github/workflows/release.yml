@@ -1,134 +1,35 @@
 name: Release
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ZIG_VERSION: "0.16.0"
-
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: linux-x86_64
-            zig_target: x86_64-linux-musl
-            ext: ""
-          - os: ubuntu-latest
-            target: linux-aarch64
-            zig_target: aarch64-linux-musl
-            ext: ""
-          - os: ubuntu-latest
-            target: linux-riscv64
-            zig_target: riscv64-linux-musl
-            ext: ""
-          - os: macos-latest
-            target: macos-aarch64
-            zig_target: aarch64-macos
-            ext: ""
-          - os: macos-latest
-            target: macos-x86_64
-            zig_target: x86_64-macos
-            ext: ""
-          - os: windows-latest
-            target: windows-x86_64
-            zig_target: x86_64-windows
-            ext: ".exe"
-          - os: windows-latest
-            target: windows-aarch64
-            zig_target: aarch64-windows
-            ext: ".exe"
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install Zig 0.16.0
-        run: bash .github/scripts/install-zig.sh "${ZIG_VERSION}"
-
-      - name: Resolve build version
-        id: version
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=dev" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build ReleaseSmall
-        run: zig build -Doptimize=ReleaseSmall -Dversion=${{ steps.version.outputs.value }} -Dtarget=${{ matrix.zig_target }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: nullwatch-${{ matrix.target }}
-          path: zig-out/bin/nullwatch${{ matrix.ext }}
-
-  source:
-    name: Prepare source archive
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Create source archive
-        run: |
-          archive_name="nullwatch-source-${GITHUB_REF_NAME}.tar.gz"
-          tar \
-            --exclude='.git' \
-            --exclude='.zig-cache' \
-            --exclude='zig-out' \
-            -czf "/tmp/${archive_name}" .
-          mv "/tmp/${archive_name}" .
-          echo "ARCHIVE_NAME=${archive_name}" >> "$GITHUB_ENV"
-
-      - name: Upload source archive
-        uses: actions/upload-artifact@v7
-        with:
-          name: nullwatch-source
-          path: ${{ env.ARCHIVE_NAME }}
-
   release:
-    needs: [build, source]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    uses: nullclaw/nullbuilder/.github/workflows/zig-release.yml@v1
     permissions:
       contents: write
-
-    steps:
-      - uses: actions/download-artifact@v8
-
-      - name: Rename binaries
-        run: |
-          mv nullwatch-linux-x86_64/nullwatch nullwatch-linux-x86_64.bin
-          mv nullwatch-linux-aarch64/nullwatch nullwatch-linux-aarch64.bin
-          mv nullwatch-linux-riscv64/nullwatch nullwatch-linux-riscv64.bin
-          mv nullwatch-macos-aarch64/nullwatch nullwatch-macos-aarch64.bin
-          mv nullwatch-macos-x86_64/nullwatch nullwatch-macos-x86_64.bin
-          mv nullwatch-windows-x86_64/nullwatch.exe nullwatch-windows-x86_64.exe
-          mv nullwatch-windows-aarch64/nullwatch.exe nullwatch-windows-aarch64.exe
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            nullwatch-linux-x86_64.bin
-            nullwatch-linux-aarch64.bin
-            nullwatch-linux-riscv64.bin
-            nullwatch-macos-aarch64.bin
-            nullwatch-macos-x86_64.bin
-            nullwatch-windows-x86_64.exe
-            nullwatch-windows-aarch64.exe
-            nullwatch-source/*.tar.gz
-          generate_release_notes: true
+    secrets: inherit
+    with:
+      binary_name: nullwatch
+      artifact_prefix: nullwatch
+      targets_json: >-
+        [
+          {"os":"ubuntu-latest","target":"linux-x86_64","zig_target":"x86_64-linux-musl","zig_cpu":"","ext":""},
+          {"os":"ubuntu-latest","target":"linux-aarch64","zig_target":"aarch64-linux-musl","zig_cpu":"","ext":""},
+          {"os":"ubuntu-latest","target":"linux-riscv64","zig_target":"riscv64-linux-musl","zig_cpu":"","ext":""},
+          {"os":"macos-latest","target":"macos-aarch64","zig_target":"aarch64-macos","zig_cpu":"","ext":""},
+          {"os":"macos-latest","target":"macos-x86_64","zig_target":"x86_64-macos","zig_cpu":"","ext":""},
+          {"os":"windows-latest","target":"windows-x86_64","zig_target":"x86_64-windows","zig_cpu":"","ext":".exe"},
+          {"os":"windows-latest","target":"windows-aarch64","zig_target":"aarch64-windows","zig_cpu":"","ext":".exe"}
+        ]
+      source_archive: true
+      source_archive_name: nullwatch-source-${{ github.ref_name }}.tar.gz
+      source_archive_excludes: |
+        .git
+        .zig-cache
+        zig-out

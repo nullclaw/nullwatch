@@ -2,6 +2,7 @@ const std = @import("std");
 const std_compat = @import("compat.zig");
 const api = @import("api.zig");
 const config = @import("config.zig");
+const demo_seed = @import("demo_seed.zig");
 const domain = @import("domain.zig");
 const Store = @import("store.zig").Store;
 const version = @import("version.zig");
@@ -135,6 +136,13 @@ pub fn main(init: std.process.Init) !void {
         var parsed = try parseJsonIngestArgs(allocator, &cursor);
         defer parsed.common.runtime.deinit(allocator);
         try runEvalIngestCommand(allocator, parsed.common.runtime, parsed.json_payload);
+        return;
+    }
+
+    if (std.mem.eql(u8, command, "demo-seed")) {
+        var parsed = try parseCommonArgs(allocator, &cursor);
+        defer parsed.deinit(allocator);
+        try runDemoSeedCommand(allocator, parsed.runtime);
         return;
     }
 
@@ -326,6 +334,14 @@ fn runEvalIngestCommand(allocator: std.mem.Allocator, runtime: RuntimeConfig, js
     defer parsed.deinit();
     const record = try store.ingestEval(parsed.value);
     try writeJsonToStdout(allocator, record);
+}
+
+fn runDemoSeedCommand(allocator: std.mem.Allocator, runtime: RuntimeConfig) !void {
+    var store = try Store.init(allocator, runtime.data_dir);
+    defer store.deinit();
+
+    const summary = try demo_seed.seed(allocator, &store);
+    try writeJsonToStdout(allocator, summary);
 }
 
 fn parseServeArgs(allocator: std.mem.Allocator, args: *ArgCursor) !struct { runtime: RuntimeConfig } {
@@ -598,6 +614,7 @@ fn printUsage() void {
         \\  nullwatch evals [--run-id ID] [--verdict VERDICT] [--eval-key KEY] [--scorer NAME] [--dataset NAME] [--limit N]
         \\  nullwatch ingest-span --json '<payload>' [--data-dir PATH] [--config PATH]
         \\  nullwatch ingest-eval --json '<payload>' [--data-dir PATH] [--config PATH]
+        \\  nullwatch demo-seed [--data-dir PATH] [--config PATH]
         \\  nullwatch --export-manifest
         \\  nullwatch --from-json '<wizard answers json>'
         \\  nullwatch version
@@ -625,6 +642,7 @@ fn printUsage() void {
 test {
     _ = api;
     _ = config;
+    _ = demo_seed;
     _ = domain;
     _ = Store;
     _ = @import("export_manifest.zig");
