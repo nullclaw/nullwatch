@@ -6,13 +6,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
   release:
     uses: nullclaw/nullbuilder/.github/workflows/zig-release.yml@v1
     permissions:
       contents: write
+      packages: write
     secrets: inherit
     with:
       binary_name: nullwatch
@@ -33,3 +35,4 @@ jobs:
         .git
         .zig-cache
         zig-out
+      publish_docker: true
