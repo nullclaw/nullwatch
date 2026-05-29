@@ -1,6 +1,6 @@
 .{
     .name = .nullwatch,
-    .version = "2026.3.16",
+    .version = "2026.5.29",
     .fingerprint = 0x331185e774b4ae7a,
     .minimum_zig_version = "0.16.0",
     .paths = .{
