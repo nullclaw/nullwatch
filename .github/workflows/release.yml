@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
   release:
@@ -34,3 +35,4 @@ jobs:
         .git
         .zig-cache
         zig-out
+      publish_docker: true
