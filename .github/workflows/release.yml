@@ -13,6 +13,7 @@ jobs:
     uses: nullclaw/nullbuilder/.github/workflows/zig-release.yml@v1
     permissions:
       contents: write
+      packages: write
     secrets: inherit
     with:
       binary_name: nullwatch
