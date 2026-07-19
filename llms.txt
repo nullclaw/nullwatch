@@ -1,0 +1,19 @@
+# NullWatch
+
+> Trace agent runs, evaluate outputs and track cost through JSON HTTP, OTLP or offline CLI. NullWatch stores append-only JSONL locally in a sub-megabyte binary.
+
+Part of the Null ecosystem (https://nullmenu.ai) — single-binary Zig tools for running AI agents on your own hardware. All components are pre-1.0 with CalVer releases. The links below point to canonical documentation pages.
+
+## Start
+
+- [Install](https://watch.nullmenu.ai/docs/start/install/): Prebuilt binaries, the Docker image, building from Zig source, or installing through NullHub.
+- [Quickstart](https://watch.nullmenu.ai/docs/start/quickstart/): Seed demo data, start the API, and inspect your first runs in five minutes.
+
+## Reference
+
+- [HTTP API](https://watch.nullmenu.ai/docs/reference/api/): Endpoints, data model, query parameters and token auth for the NullWatch JSON API.
+- [CLI](https://watch.nullmenu.ai/docs/reference/cli/): Every NullWatch command — serve, query, ingest, demo-seed — with flags and examples.
+
+## Source
+
+- [GitHub](https://github.com/nullclaw/nullwatch)
